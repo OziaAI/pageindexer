@@ -15,7 +15,7 @@ def __get_cursor():
     return (db,db.cursor())
 
 def __get_token_and_shop(cursor, notification):
-    print("Got Notification:", notification.pid, notification.channel,
+    print("Listener - Got Notification:", notification.pid, notification.channel,
           notification.payload)
 
     # According to the architecture, the database send the id of the
@@ -34,29 +34,50 @@ def __get_token_and_shop(cursor, notification):
     print(rows)
     shop_name, access_token = rows[0]
 
-    return access_token, shop_name
+    return access_token, shop_name, access_id
 
-def fill_queue_on_notify(queue: queue.Queue):
+def __mark_item(cursor, access_id):
+    query = "UPDATE shopify_access SET product_loaded = TRUE WHERE id = %s";
 
-    (db,cursor) = __get_cursor()
+    cursor.execute(query, (access_id,))
+
+
+def __fill_queue_on_notify(queue: queue.Queue, db, cursor):
+
     # https://stackoverflow.com/a/44199319
     # According to this post, we need to quote the channel name
     cursor.execute("LISTEN \"access_update\";")
 
-    print("Listening for any notification on `access_update`")
+    print("Listener - Listening for any notification on `access_update`")
 
     while True:
         if select.select([db],[],[],5) == ([],[],[]):
             # https://www.psycopg.org/docs/advanced.html#asynchronous-notifications
             # This technique checks, using kernel awakening strategy, 
             # when some data is ready to be read
-            print("Timeout")
+            pass
         else:
             db.poll()
             while db.notifies:
                 notification = db.notifies.pop(0)
-                item = __get_token_and_shop(cursor, notification)
-                queue.put(item)
+                access_token, shop_name, access_id = __get_token_and_shop(cursor, notification)
+                queue.put((access_token, shop_name))
+                __mark_item(cursor, access_id)
 
+def __fill_queue_of_unprocessed(queue: queue.Queue, db, cursor):
 
+    query = "SELECT shop_name, access_token, id FROM shopify_access WHERE product_loaded = False";
 
+    cursor.execute(query)
+
+    rows = cursor.fetchall()
+    for row in rows:
+        shop_name, access_token, access_id = row
+        queue.put((access_token, shop_name))
+        __mark_item(cursor, access_id)
+
+def fill_process_queue(queue: queue.Queue):
+    (db,cursor) = __get_cursor()
+
+    __fill_queue_of_unprocessed(queue, db, cursor)
+    __fill_queue_on_notify(queue, db, cursor)
