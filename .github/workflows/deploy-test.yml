@@ -18,8 +18,8 @@ jobs:
           ssh_key: ${{ secrets.SSH_KEY }}
       - name: Deploy PageIndexer on created context
         env:
-          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-          DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
           ES_HOST: ${{ secrets.ES_HOST }}
           ES_PORT: ${{ secrets.ES_PORT }}
           ES_API_KEY: ${{ secrets.ES_API_KEY }}
