@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  pageindexer:
+    image: "pageindexer:production"
+    container_name: "pageindexer-prod"
+    build: .
+    environment:
+      - DB_NAME=shops
+      - DB_USER=pageindexer_service
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=5432
+      - ES_HOST=${ES_HOST}
+      - ES_PORT=${ES_PORT}
+      - ES_API_KEY=${ES_API_KEY}
+      - SHOPIFY_API_KEY=${SHOPIFY_API_KEY}
+      - SHOPIFY_API_SECRET=${SHOPIFY_API_SECRET}
+    networks:
+      - proxynet
+networks:
+  proxynet:
+    name: ozia_backend

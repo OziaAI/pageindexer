@@ -1,0 +1,32 @@
+name: "Deploy PageIndexer on test server"
+
+on:
+  push:
+    branches: [ dev ]
+  workflow_dispatch:
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: "Publish on the test server"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create a remote docker context
+        uses: arwynfr/actions-docker-context@v2
+        with:
+          docker_host: ${{ secrets.DOCKER_HOST }}
+          context_name: "remote"
+          ssh_cert: ${{ secrets.SSH_CERT }}
+          ssh_key: ${{ secrets.SSH_KEY }}
+      - name: Deploy PageIndexer on created context
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          ES_HOST: ${{ secrets.ES_HOST }}
+          ES_PORT: ${{ secrets.ES_PORT }}
+          ES_API_KEY: ${{ secrets.ES_API_KEY }}
+          SHOPIFY_API_KEY: ${{ secrets.SHOPIFY_API_KEY }}
+          SHOPIFY_API_SECRET: ${{ secrets.SHOPIFY_API_SECRET }}
+        run: |
+          docker --context remote compose up --build -d
+
