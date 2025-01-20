@@ -3,6 +3,12 @@ from sentence_transformers import SentenceTransformer
 
 
 def create_product_document(model: SentenceTransformer, product: shopify.Product):
+    """
+    Create a document for a product that can be indexed by the indexer.
+    @param model: SentenceTransformer model to encode the product title and description
+    @param product: Shopify product object
+    @return: Dictionary containing the product information
+    """
     product_options_values = [option.values for option in product.attributes["options"]]
 
     product_options = sum(product_options_values, [])

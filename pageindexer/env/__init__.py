@@ -1,11 +1,13 @@
 import os
 
+
 def __set_env(env_name: str):
     env_value = os.getenv(env_name)
     if env_value is None:
         print("Please set " + env_name + " as an environment variable")
         exit(1)
     return env_value
+
 
 SHOPIFY_API_KEY = __set_env("SHOPIFY_API_KEY")
 SHOPIFY_API_SECRET = __set_env("SHOPIFY_API_SECRET")
